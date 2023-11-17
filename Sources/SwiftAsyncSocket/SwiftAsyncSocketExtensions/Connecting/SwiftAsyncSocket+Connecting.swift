@@ -86,7 +86,10 @@ extension SwiftAsyncSocket {
         }
 
         guard Darwin.fcntl(currentSocketFD, F_SETFL, O_NONBLOCK) != -1 else {
-            closeSocket(error: SwiftAsyncSocketError(msg: "Error enabling non-blocking IO on socket (fcntl)"))
+            let errorNumber = errno // Capture the error number
+            let errorMessage = String(cString: strerror(errorNumber)) // Convert error number to a human-readable string
+
+            closeSocket(error: SwiftAsyncSocketError(msg: "Error enabling non-blocking IO on socket (fcntl). Error \(errorNumber): \(errorMessage)"))
             return
         }
 
