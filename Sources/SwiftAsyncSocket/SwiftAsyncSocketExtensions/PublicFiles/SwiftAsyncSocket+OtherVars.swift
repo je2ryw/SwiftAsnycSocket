@@ -331,11 +331,22 @@ extension SwiftAsyncSocket {
 }
 
 extension SwiftAsyncSocket {
+    private func isSocketValid(_ socketFD: Int32) -> Bool {
+        guard socketFD >= 0 else { return false }
+
+        var addr = sockaddr()
+        var len = socklen_t(MemoryLayout<sockaddr>.size)
+        return getsockname(socketFD, &addr, &len) != -1
+    }
+
     var currentSocketFD: Int32 {
-        return (socket4FD != SwiftAsyncSocketKeys.socketNull) ?
-            socket4FD :
-            (socket6FD != SwiftAsyncSocketKeys.socketNull) ?
-                socket6FD : socketUN
+        if socket4FD != SwiftAsyncSocketKeys.socketNull, isSocketValid(socket4FD) {
+            return socket4FD
+        } else if socket6FD != SwiftAsyncSocketKeys.socketNull, isSocketValid(socket6FD) {
+            return socket6FD
+        } else {
+            return socketUN
+        }
     }
 
     var isUsingCFStreamForTLS: Bool {
